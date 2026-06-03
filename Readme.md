@@ -7,6 +7,7 @@
 - gcm.R: GCM code
 - fit_gcm.R: fitting GCM, tuning GCM, fitting best model
 - load_racz_rebrus.R: load data from Racz & Rebrus CLLT paper
+- generate_non_words_updated.R: generate nonwords from racz_rebrus list for hand-cleaning
 - parse_exp_results.R: parse nonword exp results (not working in anonymous repo)
 
 ### dat
