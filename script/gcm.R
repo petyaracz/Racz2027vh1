@@ -13,7 +13,7 @@ GCM = function(test, training, ph_dist, var_s, var_p) {
       dplyr::select(training, transcribed, gcm_category),
       join_by(train_w == transcribed)
     ) |>
-    dplyr::mutate(pairwise_sim = exp(-phon_dist / var_s)^var_p) |>                   # pairwise similarity
+    dplyr::mutate(pairwise_sim = exp(-(phon_dist / var_s)^var_p)) |>                # pairwise similarity
     dplyr::group_by(test_w, gcm_category) |>                                          # group by test word and category
     dplyr::summarise(category_sim = sum(pairwise_sim), .groups = 'drop_last') |>     # sum similarity per category
     dplyr::mutate(total_sim = sum(category_sim)) |>                                   # total similarity per test word

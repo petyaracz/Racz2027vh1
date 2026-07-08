@@ -8,6 +8,7 @@ library(tidyverse)
 library(glmmTMB)
 library(performance)
 library(brms)
+library(ggthemes)
 
 # -- fun -- #
 
@@ -27,6 +28,7 @@ source('script/gcm.R')
 trials_nonwords = read_tsv('dat/filtered_data_nonword.tsv')   # nonword trial data
 racz_rebrus     = read_tsv('dat/racz_rebrus.tsv')   # real word phonological predictions
 ph_dist         = read_tsv('dat/word_distances.tsv.gz')        # pre-computed pairwise phonological distances
+stim = read_tsv('dat/nonword_classes.tsv')
 
 # -- setup gcm -- #
 
@@ -105,11 +107,47 @@ broom.mixed::tidy(best_fit) |>
   knitr::kable('latex', digits = 2)
 sjPlot::plot_model(best_fit, 'pred')
 hypothesis(best_fit, 'c_p_back > 0')
+
+# -- viz -- #
+
+viz_dat = words |> 
+  rename(stem = word) |> 
+  left_join(best_preds)
+
 best_preds |> 
   summarise(
     mean = mean(accept),
     .by = c(stem,p_back)
   ) |> 
-  ggplot(aes(p_back,mean)) +
-  geom_point() +
+  ggplot(aes(p_back,mean,label = stem)) +
+  geom_label() +
   geom_smooth()
+
+viz_dat |> 
+  summarise(
+    mean = mean(accept),
+    .by = c(stem,p_back,class)
+  ) |> 
+  ggplot(aes(p_back,mean,label = stem)) +
+  geom_smooth() +
+  geom_label(aes(colour = class)) +
+  theme_few() +
+  scale_colour_colourblind()
+
+viz_dat |> 
+  summarise(
+    mean = mean(accept),
+    .by = c(stem,p_back,class)
+  ) |> 
+  mutate(
+    `word type` = ifelse(class == 'bizalmas',
+                    'Yiddish/German',
+                    'French/Latin'
+                    )
+  ) |> 
+  ggplot(aes(`word type`,mean)) +
+  ggrain::geom_rain() + 
+  theme_bw() +
+  coord_flip() +
+  ylab('mean accept "back"')
+ggsave('viz/distributions.pdf', width = 4, height = 3)
