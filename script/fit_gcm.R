@@ -2,7 +2,7 @@
 
 # -- head -- #
 
-setwd('~/Github/xxx/')
+setwd('~/Github/Racz2027vh1/')
 
 library(tidyverse)
 library(glmmTMB)
@@ -108,46 +108,18 @@ broom.mixed::tidy(best_fit) |>
 sjPlot::plot_model(best_fit, 'pred')
 hypothesis(best_fit, 'c_p_back > 0')
 
-# -- viz -- #
+# -- combine -- #
 
-viz_dat = words |> 
-  rename(stem = word) |> 
-  left_join(best_preds)
+best_preds_2 = best_preds |> 
+  rename(word = stem) |> 
+  distinct(word,p_back,c_p_back)
 
-best_preds |> 
-  summarise(
-    mean = mean(accept),
-    .by = c(stem,p_back)
-  ) |> 
-  ggplot(aes(p_back,mean,label = stem)) +
-  geom_label() +
-  geom_smooth()
+alld = trials_nonwords |> 
+  rename(word = target) |> 
+  left_join(nonwords) |> 
+  mutate(word_class = ifelse(class == 'bizalmas', 'German/Yiddish', 'French/Latin')) |> 
+  left_join(best_preds_2)
 
-viz_dat |> 
-  summarise(
-    mean = mean(accept),
-    .by = c(stem,p_back,class)
-  ) |> 
-  ggplot(aes(p_back,mean,label = stem)) +
-  geom_smooth() +
-  geom_label(aes(colour = class)) +
-  theme_few() +
-  scale_colour_colourblind()
+# -- write -- #
 
-viz_dat |> 
-  summarise(
-    mean = mean(accept),
-    .by = c(stem,p_back,class)
-  ) |> 
-  mutate(
-    `word type` = ifelse(class == 'bizalmas',
-                    'Yiddish/German',
-                    'French/Latin'
-                    )
-  ) |> 
-  ggplot(aes(`word type`,mean)) +
-  ggrain::geom_rain() + 
-  theme_bw() +
-  coord_flip() +
-  ylab('mean accept "back"')
-ggsave('viz/distributions.pdf', width = 4, height = 3)
+write_tsv(alld, 'dat/filtered_data_nonword_class_gcm_preds.tsv')
